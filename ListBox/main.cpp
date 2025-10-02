@@ -40,8 +40,11 @@ BOOL CALLBACK DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 			break;
 		case IDC_BUTTON_ADD:
+			{
 			DialogBoxParam(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_DIALOG_ADD), hwnd, (DLGPROC)DlgProcAdd, 0);
-				break;
+			}
+			break
+				;
 		case IDOK:
 		{
 			CONST INT SIZE = 256;
@@ -54,6 +57,23 @@ BOOL CALLBACK DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			MessageBox(hwnd, sz_message, "Info", MB_OK | MB_ICONINFORMATION);
 		}
 			break;
+		case IDC_DELETE:
+		{	
+			HWND hListBox = GetDlgItem(hwnd, IDC_LIST);
+			if (SendMessage(hListBox,LB_GETCURSEL,0,0) == LB_ERR)
+			{ 
+				MessageBox(hwnd, "Не выбран элемент списка", "Error", MB_OK | MB_ICONERROR);
+				break;
+			}
+			else
+			{
+				HWND hListBox = GetDlgItem(hwnd, IDC_LIST);
+				INT i = SendMessage(hListBox, LB_GETCURSEL, 0, 0);
+				SendMessage(hListBox, LB_DELETESTRING, i, 0);
+			}
+			
+			break;
+		}
 		case IDCANCEL:
 			EndDialog(hwnd, 0);
 			break;
@@ -118,6 +138,30 @@ BOOL CALLBACK DlgProcEdit(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 	break;
 	case WM_COMMAND:
+		switch (LOWORD(wParam))
+		{
+			case IDOK:
+			{
+				CHAR sz_message[FILENAME_MAX] = {};
+				CHAR sz_buffer[FILENAME_MAX] = {};
+				HWND hListBox = GetDlgItem(GetParent(hwnd), IDC_LIST);
+				HWND hEditItem = GetDlgItem(hwnd, IDC_EDIT_ITEM);
+				INT i = SendMessage(hListBox, LB_GETCURSEL, 0, 0);
+				SendMessage(hEditItem, WM_GETTEXT, FILENAME_MAX, (LPARAM)sz_buffer);
+				SendMessage(hListBox, LB_DELETESTRING, i, 0);
+				SendMessage(hListBox, LB_INSERTSTRING, i, (LPARAM)sz_buffer);
+				sprintf(sz_message, "Элемент #%i успешно изменен", i);
+				MessageBox(hwnd, sz_message, "Info", MB_OK | MB_ICONINFORMATION);
+				SendMessage(hListBox, LB_SETCURSEL, i, 0);
+				EndDialog(hwnd, 0);
+				break;
+
+			}
+			break;
+			case IDCANCEL:
+				EndDialog(hwnd, 0);
+				break;
+		}
 		break;
 	case WM_CLOSE:
 		EndDialog(hwnd, 0);
